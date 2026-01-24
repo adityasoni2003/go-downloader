@@ -4,6 +4,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 func downloadSingle(url, path string) error {
@@ -19,6 +21,15 @@ func downloadSingle(url, path string) error {
 	}
 	defer file.Close()
 
-	_, err = io.Copy(file, resp.Body)
+	bar := progressbar.NewOptions64(
+		resp.ContentLength,
+		progressbar.OptionSetDescription("Downloading"),
+		progressbar.OptionShowBytes(true),
+		progressbar.OptionSetWidth(40),
+		progressbar.OptionThrottle(100),
+		progressbar.OptionClearOnFinish(),
+	)
+
+	_, err = io.Copy(io.MultiWriter(file, bar), resp.Body)
 	return err
 }
